@@ -7,3 +7,5 @@ Note that only a small part of Art-Net protocol is implemented. It is only capab
 
 I inspired myself from [darknessii project](https://github.com/darknessii/rpi-matrix-artnet), which was coded in Python. The choice of the C language was for performance reasons.
 
+I am currently using [Jinx 2.4](http://www.live-leds.de/download/168/) as Art-Net client.
+An example of configuration is given in this repository.
