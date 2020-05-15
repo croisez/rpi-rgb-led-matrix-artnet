@@ -16,12 +16,12 @@
 #include <signal.h>
 #include <math.h>
 
-#define UNIVERS_LEN 170
 #define ARTNET_WIDTH 64
 #define ARTNET_HEIGHT 32
-#define UNIVERSUM_COUNT 13
 #define HORIZ_NUMBER_PANELS 1
 #define VERT_NUMBER_PANELS 1
+#define UNIVERSE_LEN 170
+#define UNIVERSE_COUNT 13
 
 struct RGBLedMatrixOptions options;
 struct RGBLedMatrix *matrix;
@@ -29,15 +29,17 @@ struct LedCanvas *offscreen_canvas;
 
 volatile int terminating = 0; 
 void terminate(int sign) { 
-	terminating = 1; 
+	printf("Exiting\n");
+	led_matrix_delete(matrix);
+	exit(0);
 }
 
 int main(int argc, char **argv)
 {
 	int width, height;
 	int x, y, i;
-	int x_start[UNIVERSUM_COUNT];
-	int y_start[UNIVERSUM_COUNT];
+	int x_start[UNIVERSE_COUNT];
+	int y_start[UNIVERSE_COUNT];
 
 	memset(&options, 0, sizeof(options));
 	options.cols = ARTNET_WIDTH;
@@ -50,27 +52,25 @@ int main(int argc, char **argv)
   	options.hardware_mapping = "regular";
   	options.inverse_colors = 0;
   	options.led_rgb_sequence = "RGB";
-  	//options.gpio_slowdown = 2;
   	options.pwm_lsb_nanoseconds = 150;
   	options.show_refresh_rate = 0;
   	options.disable_hardware_pulsing = 1;
   	options.scan_mode = 0;
   	options.pwm_bits = 11;
-  	//options.daemon = 0;
-  	//options.drop_privileges = 0;
 
-	/* This supports all the led commandline options. Try --led-help */
 	matrix = led_matrix_create_from_options(&options, &argc, &argv);
 	if (matrix == NULL) return 1;
+
+	printf("Use --led-help command line switch to get all available options.\n");
 
 	offscreen_canvas = led_matrix_create_offscreen_canvas(matrix);
 	led_canvas_get_size(offscreen_canvas, &width, &height);
 
 	x_start[0] = 0; y_start[0] = 0;
-	for (int u=1; u <= UNIVERSUM_COUNT-1; u++) {
-		int rest = 170 - 64 + x_start[u-1];
-		int restmod = trunc(rest/64);
-		x_start[u] = rest - restmod*64;
+	for (int u=1; u < UNIVERSE_COUNT; u++) {
+		int rest = UNIVERSE_LEN - ARTNET_WIDTH + x_start[u-1];
+		int restmod = trunc(rest / ARTNET_WIDTH);
+		x_start[u] = rest - restmod * ARTNET_WIDTH;
 		y_start[u] = y_start[u-1] + restmod + 1;
 	}
 
@@ -90,14 +90,15 @@ int main(int argc, char **argv)
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
 	server.sin_port = htons(6454);
-	if (bind(sock, (struct sockaddr *)&server, length) < 0) printf("binding");
+	if (bind(sock, (struct sockaddr *)&server, length) < 0) printf("binding\n");
 	fromlen = sizeof(struct sockaddr_in);
 	
 	printf("Listening on port UDP/6454\n");
+	printf("Hit Ctrl-C for clean exit\n");
 	
 	signal(SIGINT, terminate);
 	
-	while (!terminating) 
+	while (1) 
 	{
 		n = recvfrom(sock, buf, 1024, 0, (struct sockaddr *)&from, &fromlen);
 		if ((n > 18) && (strncmp(buf, "Art-Net\x00", 8) == 0)) {
@@ -133,9 +134,6 @@ int main(int argc, char **argv)
 			}
 		}
 	}
-
-	printf("Exited\n");
-	led_matrix_delete(matrix);
 
 	return 0;
 }
