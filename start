@@ -1,0 +1,3 @@
+#!/bin/bash
+./rpi-rgb-led-matrix-artnet --led-brightness=75
+#./rpi-rgb-led-matrix-artnet --led-brightness=75 --led-daemon

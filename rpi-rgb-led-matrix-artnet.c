@@ -48,7 +48,7 @@ int main(int argc, char **argv)
 	options.parallel = VERT_NUMBER_PANELS;
 	options.multiplexing = 0;
   	options.row_address_type = 0;
-  	options.brightness = 50;
+  	options.brightness = 100;
   	options.hardware_mapping = "regular";
   	options.inverse_colors = 0;
   	options.led_rgb_sequence = "RGB";
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
   	options.pwm_bits = 11;
 
 	matrix = led_matrix_create_from_options(&options, &argc, &argv);
-	if (matrix == NULL) return 1;
+	if (matrix == NULL) { printf("Error creating matrix object\n"); return 1; }
 
 	printf("Use --led-help command line switch to get all available options.\n");
 
@@ -84,13 +84,13 @@ int main(int argc, char **argv)
 	int  lastSequence = 0;
 
 	sock = socket(AF_INET, SOCK_DGRAM, 0);
-	if (sock < 0) printf("Opening socket\n");
+	if (sock < 0) { printf("Error opening socket\n"); return 1; }
 	length = sizeof(server);
 	bzero(&server, length);
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
 	server.sin_port = htons(6454);
-	if (bind(sock, (struct sockaddr *)&server, length) < 0) printf("binding\n");
+	if (bind(sock, (struct sockaddr *)&server, length) < 0) { printf("Error binding socket\n"); return 1; }
 	fromlen = sizeof(struct sockaddr_in);
 	
 	printf("Listening on port UDP/6454\n");
@@ -112,6 +112,12 @@ int main(int argc, char **argv)
 				int universe = (int)(buf[14] & 0x0F);
 				int  rgb_length = (buf[16]<<8) + buf[17];
 
+				//Sequence is complete, let us display it
+				if (lastSequence != sequence) {
+					offscreen_canvas = led_matrix_swap_on_vsync(matrix, offscreen_canvas);
+					lastSequence = sequence;
+				}
+
 				x = x_start[universe];
 				y = y_start[universe];
 
@@ -125,12 +131,6 @@ int main(int argc, char **argv)
 					led_canvas_set_pixel(offscreen_canvas, x, y, R, G, B);
 					if (x < width-1) {x++;} else { x=0; y++; }
 				}
-
-				//Sequence is complete, let us display it
-				if (lastSequence != sequence) {
-					offscreen_canvas = led_matrix_swap_on_vsync(matrix, offscreen_canvas);
-				}
-				lastSequence = sequence;
 			}
 		}
 	}
