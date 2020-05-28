@@ -1,4 +1,7 @@
 #!/bin/bash
 PID=`ps -ef | grep artnet | grep -v grep | awk -F ' ' '{print $2;}'`
-echo Killing $PID process
-kill -9 $PID
+if [ -n "$PID" ];
+then
+  echo Killing $PID process
+  kill -9 $PID
+fi

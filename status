@@ -1,3 +1,8 @@
 #!/bin/bash
 PID=`ps -ef | grep artnet | grep -v grep | awk -F ' ' '{print $2;}'`
-echo Process running on $PID
+if [ -z "$PID" ];
+then
+  echo Process not running
+else
+  echo Process running on $PID
+fi
