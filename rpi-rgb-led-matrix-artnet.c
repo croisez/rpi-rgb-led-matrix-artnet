@@ -41,11 +41,13 @@ int main(int argc, char **argv)
 	int x_start[UNIVERSE_COUNT];
 	int y_start[UNIVERSE_COUNT];
 
+	/* My own configuration is 4 panels P4 64x32, configured in U-mapper style as a chain of length 4 */
 	memset(&options, 0, sizeof(options));
 	options.cols = ARTNET_WIDTH;
 	options.rows = ARTNET_HEIGHT;
-	options.chain_length = HORIZ_NUMBER_PANELS;
-	options.parallel = VERT_NUMBER_PANELS;
+	options.chain_length = 4;
+	options.parallel = 1;
+	options.pixel_mapper_config = "U-mapper";
 	options.multiplexing = 0;
   	options.row_address_type = 0;
   	options.brightness = 100;
